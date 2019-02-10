@@ -11,11 +11,12 @@ const body_parser_1 = require("body-parser");
 const expressSession = require("express-session");
 const passport = require("passport");
 const passport_local_1 = require("passport-local");
+const path = require("path");
 class Server {
     constructor(client) {
         this.app = express();
         this.initDb(client.connect("main")).then((collections) => {
-            this.app.set("port", 3000);
+            this.app.set("port", 8080);
             this.app.use(cookieParser());
             this.app.use(body_parser_1.json());
             this.app.use(expressSession({
@@ -26,7 +27,11 @@ class Server {
             this.app.use(passport.initialize());
             this.initPassport(collections);
             this.app.use(passport.session());
+            this.app.use(express.static(path.join(__dirname, '..', '..', 'your-test-kitchen-ui', 'dist', 'groundup')));
             this.app.use("/api", ApiRouter_1.ApiRouter(collections));
+            this.app.get('*', (req, res) => {
+                res.sendFile(path.join(__dirname, '..', '..', 'your-test-kitchen-ui', 'dist', 'groundup', 'index.html'));
+            });
             let server = http.createServer(this.app);
             server.listen(this.app.get("port"), () => {
                 console.log("Express server listening on port " + this.app.get("port"));

@@ -24,6 +24,13 @@ exports.RecipeRouter = (collections) => {
         req.commitId = commitId;
         next();
     });
+    router.get('/:recipeId/children', (req, res) => {
+        collections.Recipes.findOne({ _id: new mongodb_1.ObjectID(req.recipeId) }, (err, parent) => {
+            collections.Recipes.find({ genesis: parent.genesis, previous: parent.created }).toArray().then((children) => {
+                res.send(children);
+            });
+        });
+    });
     router.route('/:recipeId').get((req, res) => {
         collections.Recipes.findOne({ _id: new mongodb_1.ObjectID(req.recipeId) }, { sort: { $natural: -1 } }, (err, recipe) => {
             console.log(err);

@@ -6,32 +6,6 @@ type RecipeRequest = express.Request & {
     recipeId:string,
     commitId:string
 }
-/*
-const seed :Recipe  = {
-    name: "Blue Cheese Bread",
-    commitMsg:"First commit",
-    items:[{
-        name: "Egg",
-        quantity: "4",
-        type: "ingredient",
-        comments:[{
-            text: "i love egys",
-            createdAt: new Date()
-        }]
-    }],
-    steps:[{
-        description: "mix dem eggos",
-        time: 5,
-        tags: [],
-        comments: []
-    },
-    {
-        description: "mix dem eggos agaiin",
-        time: 2,
-        tags: [],
-        comments: []
-    }],
-}*/
 
 type Node = {
     parent: Recipe,
@@ -60,6 +34,13 @@ export const RecipeRouter = (collections : Collections) => {
     router.param("commitId",(req : RecipeRequest,_, next, commitId) => {
         req.commitId = commitId
         next()
+    })
+    router.get('/:recipeId/children', (req : RecipeRequest,res) => {
+        collections.Recipes.findOne({_id:new ObjectID(req.recipeId)},(err,parent : Recipe) => {
+            collections.Recipes.find({genesis:parent.genesis,previous:parent.created}).toArray().then((children : Recipe[]) => {
+                res.send(children)
+            })
+        })
     })
     router.route('/:recipeId').get((req: RecipeRequest,res) => {
         collections.Recipes.findOne({_id:new ObjectID(req.recipeId)},{sort:{$natural:-1}},(err,recipe : Recipe) => {

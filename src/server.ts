@@ -10,6 +10,7 @@ import * as expressSession from "express-session";
 import * as passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import {Collections} from "./objects"
+import * as path from "path"
 
 class Server {
   private app = express();
@@ -21,9 +22,10 @@ class Server {
 
   constructor(client: DbClient) {
     this.initDb(client.connect("main")).then((collections : Collections) => {
-      this.app.set("port", 3000);
+      this.app.set("port", 8080);
       this.app.use(cookieParser());
       this.app.use(json());
+      
       this.app.use(
         expressSession({
           secret: "keyboard cat",
@@ -34,8 +36,12 @@ class Server {
       this.app.use(passport.initialize())
       this.initPassport(collections)
       this.app.use(passport.session())
+      
+      this.app.use(express.static(path.join(__dirname, '..','..','your-test-kitchen-ui','dist','groundup')));
       this.app.use("/api", ApiRouter(collections));
-
+      this.app.get('*', (req, res) => {
+        res.sendFile(path.join(__dirname, '..','..','your-test-kitchen-ui','dist','groundup','index.html'));
+      });
       let server = http.createServer(this.app);
       server.listen(this.app.get("port"), () => {
         console.log("Express server listening on port " + this.app.get("port"));
